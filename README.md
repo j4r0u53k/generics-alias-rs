@@ -5,9 +5,9 @@ on functions or other objects.
 
 There are two macros provided:
 
- - `generics_def!(Ident <Generic1, Generic2, ...>)`: A proc macro that takes an identifier followed by generics definition (enclosed in `<>`) as the argument
- - `#[generics(Ident)]`: An attribute macro with one parameter, which is the identifier defined by `generics_def`. The macro injects the defined generics
- into the definition of the function decorated by this macro
+ - `generics_def!(Ident <Generic1, Generic2, ...>)`: A proc macro that takes an identifier followed by generics definition (enclosed in `<>`) as the argument.
+ - `#[generics(Ident1, Ident2, ...)]`: An attribute macro with a comma separated list of parameters, each of which is an identifier defined by `generics_def`.
+ The macro injects the defined generics into the definition of the function decorated by this macro.
 
 ## Example
 
@@ -44,6 +44,20 @@ where
 }
 ```
 
+Multiple definitions can be applied at once:
+
+``` rust
+use generics_alias::*;
+
+generics_def!(Reader<R: futures::AsyncRead + Send + Unpin>);
+generics_def!(Writer<W: futures::AsyncWrite + Send + Unpin>);
+
+#[generics(Reader, Writer)]
+fn foo(reader: &R, writer: &mut W)
+{
+    // ...
+}
+```
 
 ## Details
 

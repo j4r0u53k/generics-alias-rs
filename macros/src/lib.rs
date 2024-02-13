@@ -3,10 +3,9 @@ use macro_magic::import_tokens_attr;
 use quote::quote;
 use syn::parse::{Parse, ParseStream, Result};
 use syn::parse_macro_input;
-use syn::Generics;
-use syn::Ident;
-use syn::ItemFn;
-use syn::ItemTrait;
+use syn::{ItemTrait, Item, ItemFn, Ident, Generics};
+use syn::punctuated::Punctuated;
+use syn::token::Comma;
 // use syn::Token;
 
 struct GenericsDef {
@@ -33,9 +32,20 @@ pub fn generics_def(input: TokenStream) -> TokenStream {
     .into()
 }
 
-#[import_tokens_attr]
 #[proc_macro_attribute]
 pub fn generics(input: TokenStream, annotated_item: TokenStream) -> TokenStream {
+    let input_args  = parse_macro_input!(input with Punctuated<Ident, Comma>::parse_separated_nonempty).into_iter();
+    let annotated_item: Item = parse_macro_input!(annotated_item);
+    quote!(
+        #(#[generics_inner(#input_args)])
+        *
+        #annotated_item
+        ).into()
+}
+
+#[import_tokens_attr]
+#[proc_macro_attribute]
+pub fn generics_inner(input: TokenStream, annotated_item: TokenStream) -> TokenStream {
     let mut fun = parse_macro_input!(annotated_item as ItemFn);
     let imported = parse_macro_input!(input as ItemTrait);
     let bounds = imported.generics;
