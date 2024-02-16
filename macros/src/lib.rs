@@ -3,7 +3,7 @@ use macro_magic::import_tokens_attr;
 use quote::quote;
 use syn::parse::{Parse, ParseStream, Result};
 use syn::parse_macro_input;
-use syn::{ItemTrait, Item, ItemFn, Ident, Generics};
+use syn::{ItemTrait, Item, Ident, Generics};
 use syn::punctuated::Punctuated;
 use syn::token::Comma;
 // use syn::Token;
@@ -46,13 +46,20 @@ pub fn generics(input: TokenStream, annotated_item: TokenStream) -> TokenStream 
 #[import_tokens_attr]
 #[proc_macro_attribute]
 pub fn generics_inner(input: TokenStream, annotated_item: TokenStream) -> TokenStream {
-    let mut fun = parse_macro_input!(annotated_item as ItemFn);
+    let mut item = parse_macro_input!(annotated_item as Item);
     let imported = parse_macro_input!(input as ItemTrait);
     let bounds = imported.generics;
-    let generic_params = &mut fun.sig.generics.params;
+
+    let generic_params = match &mut item {
+        Item::Fn(fun) => &mut fun.sig.generics.params,
+        Item::Impl(impl_item) => &mut impl_item.generics.params,
+        Item::Struct(struct_item) => &mut struct_item.generics.params,
+        Item::Trait(trait_item) => &mut trait_item.generics.params,
+        _ => panic!("Invalid type")
+    };
     bounds
         .params
         .iter()
         .for_each(|b| generic_params.push(b.clone()));
-    fun.into_token_stream().into()
+    item.into_token_stream().into()
 }
