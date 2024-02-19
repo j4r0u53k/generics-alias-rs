@@ -6,7 +6,6 @@ use syn::{parse_macro_input, Token};
 use syn::{ItemTrait, Item, Ident, Generics};
 use syn::punctuated::Punctuated;
 use syn::token::Comma;
-// use syn::Token;
 
 struct GenericsDef {
     ident: Ident,
@@ -16,7 +15,6 @@ struct GenericsDef {
 impl Parse for GenericsDef {
     fn parse(input: ParseStream) -> Result<Self> {
         let ident: Ident = input.parse()?;
-        // input.parse::<Token![,]>()?;
         let mut generics: Generics = input.parse()?;
         if input.peek(Token![where]) {
             *generics.make_where_clause() = input.parse()?;
@@ -25,6 +23,18 @@ impl Parse for GenericsDef {
     }
 }
 
+/// Defines a new alias for generics.
+///
+/// The generics is a comma separated list enclosed in `< >` optionally followed by `where`
+/// keyword followed by further bounds definitions, each separated by a comma.
+///
+/// # Examples
+///
+/// ```
+/// # use generics_alias_macros::*;
+/// # use macro_magic::export_tokens_no_emit;
+/// generics_def!(MyBounds <X: Copy + Clone, Y> where Option<Y>: Send + Sync);
+/// ```
 #[proc_macro]
 pub fn generics_def(input: TokenStream) -> TokenStream {
     let GenericsDef { ident, generics } = parse_macro_input!(input);
@@ -36,6 +46,24 @@ pub fn generics_def(input: TokenStream) -> TokenStream {
     .into()
 }
 
+/// Applies generics defined by [`generics_def`](macro@generics_def) macro to the attached item.
+///
+/// Accepts a comma separated list of identifiers.
+///
+/// # Examples
+///
+/// ```
+/// # use macro_magic::export_tokens_no_emit;
+/// # use generics_alias_macros::*;
+/// # use core::fmt::Debug;
+/// # generics_def!(Bounds1 <A: Copy>);
+/// # generics_def!(Bounds2 <B: Clone>);
+/// # generics_def!(Bounds3 <C: ?Sized + Debug>);
+/// #[generics(Bounds1, Bounds2, Bounds3)]
+/// trait Foo {
+///    // ...
+/// }
+/// ```
 #[proc_macro_attribute]
 pub fn generics(input: TokenStream, annotated_item: TokenStream) -> TokenStream {
     let input_args  = parse_macro_input!(input with Punctuated<Ident, Comma>::parse_separated_nonempty).into_iter();
@@ -47,6 +75,7 @@ pub fn generics(input: TokenStream, annotated_item: TokenStream) -> TokenStream 
         ).into()
 }
 
+#[doc(hidden)]
 #[import_tokens_attr]
 #[proc_macro_attribute]
 pub fn generics_inner(input: TokenStream, annotated_item: TokenStream) -> TokenStream {
@@ -58,7 +87,7 @@ pub fn generics_inner(input: TokenStream, annotated_item: TokenStream) -> TokenS
         Item::Impl(impl_item) => &mut impl_item.generics,
         Item::Struct(struct_item) => &mut struct_item.generics,
         Item::Trait(trait_item) => &mut trait_item.generics,
-        _ => panic!("Invalid type")
+        _ => panic!("Unsupported type. Types currently supported are: Fn, Impl, Struct, Trait")
     };
 
     imported.generics

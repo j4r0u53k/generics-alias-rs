@@ -1,5 +1,3 @@
-//! # Generics alias
-//!
 //! The crate provides macros for creating an alias of some generics that can be reused
 //! on functions or struct/trait impls without repeating the whole definition.
 //!
