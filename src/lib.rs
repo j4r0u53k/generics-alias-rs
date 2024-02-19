@@ -45,6 +45,22 @@
 //! impl Bar<X> for i32 { }
 //! ```
 //!
+//! Where clause:
+//!
+//! ```
+//! use core::fmt::Debug;
+//! use core::fmt::Display;
+//! use generics_alias::*;
+//!
+//! generics_def!(WhereBounds <X: Display, T: Debug> where Option<T>: Debug);
+//!
+//! #[generics(WhereBounds)]
+//! fn foo(x: X, t: Option<T>) {
+//!    println!("x={}, t={:?}", x, t);
+//! }
+//! foo(42, Some(1));
+//! ```
+//!
 
 // NOTE: The reexport of `macro_magic` crate does not work (I do not know why), so users still
 // have to specify the dependency in their Cargo.toml :(

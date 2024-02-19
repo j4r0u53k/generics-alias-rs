@@ -2,7 +2,7 @@ use proc_macro::TokenStream;
 use macro_magic::import_tokens_attr;
 use quote::quote;
 use syn::parse::{Parse, ParseStream, Result};
-use syn::parse_macro_input;
+use syn::{parse_macro_input, Token};
 use syn::{ItemTrait, Item, Ident, Generics};
 use syn::punctuated::Punctuated;
 use syn::token::Comma;
@@ -17,7 +17,10 @@ impl Parse for GenericsDef {
     fn parse(input: ParseStream) -> Result<Self> {
         let ident: Ident = input.parse()?;
         // input.parse::<Token![,]>()?;
-        let generics: Generics = input.parse()?;
+        let mut generics: Generics = input.parse()?;
+        if input.peek(Token![where]) {
+            *generics.make_where_clause() = input.parse()?;
+        }
         Ok(Self { ident, generics })
     }
 }
@@ -25,9 +28,10 @@ impl Parse for GenericsDef {
 #[proc_macro]
 pub fn generics_def(input: TokenStream) -> TokenStream {
     let GenericsDef { ident, generics } = parse_macro_input!(input);
+    let where_clause = &generics.where_clause;
     quote!(
-    #[export_tokens_no_emit]
-    trait #ident #generics {}
+        #[export_tokens_no_emit]
+        trait #ident #generics #where_clause {}
     )
     .into()
 }
@@ -48,18 +52,26 @@ pub fn generics(input: TokenStream, annotated_item: TokenStream) -> TokenStream 
 pub fn generics_inner(input: TokenStream, annotated_item: TokenStream) -> TokenStream {
     let mut item = parse_macro_input!(annotated_item as Item);
     let imported = parse_macro_input!(input as ItemTrait);
-    let bounds = imported.generics;
 
-    let generic_params = match &mut item {
-        Item::Fn(fun) => &mut fun.sig.generics.params,
-        Item::Impl(impl_item) => &mut impl_item.generics.params,
-        Item::Struct(struct_item) => &mut struct_item.generics.params,
-        Item::Trait(trait_item) => &mut trait_item.generics.params,
+    let item_generics = match &mut item {
+        Item::Fn(fun) => &mut fun.sig.generics,
+        Item::Impl(impl_item) => &mut impl_item.generics,
+        Item::Struct(struct_item) => &mut struct_item.generics,
+        Item::Trait(trait_item) => &mut trait_item.generics,
         _ => panic!("Invalid type")
     };
-    bounds
+
+    imported.generics
         .params
         .iter()
-        .for_each(|b| generic_params.push(b.clone()));
+        .for_each(|b| item_generics.params.push(b.clone()));
+
+    if let Some(imported_where) = &imported.generics.where_clause {
+        let item_where = item_generics.make_where_clause();
+        imported_where
+            .predicates
+            .iter()
+            .for_each(|p| item_where.predicates.push(p.clone()));
+    }
     item.into_token_stream().into()
 }
