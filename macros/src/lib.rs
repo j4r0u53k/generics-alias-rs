@@ -1,11 +1,11 @@
-use proc_macro::TokenStream;
 use macro_magic::import_tokens_attr;
+use proc_macro::TokenStream;
 use quote::quote;
 use syn::parse::{Parse, ParseStream, Result};
-use syn::{parse_macro_input, Token};
-use syn::{ItemTrait, Item, Ident, Generics};
 use syn::punctuated::Punctuated;
 use syn::token::Comma;
+use syn::{parse_macro_input, Token};
+use syn::{Generics, Ident, Item, ItemTrait};
 
 struct GenericsDef {
     ident: Ident,
@@ -66,13 +66,16 @@ pub fn generics_def(input: TokenStream) -> TokenStream {
 /// ```
 #[proc_macro_attribute]
 pub fn generics(input: TokenStream, annotated_item: TokenStream) -> TokenStream {
-    let input_args  = parse_macro_input!(input with Punctuated<Ident, Comma>::parse_separated_nonempty).into_iter();
+    let input_args =
+        parse_macro_input!(input with Punctuated<Ident, Comma>::parse_separated_nonempty)
+            .into_iter();
     let annotated_item: Item = parse_macro_input!(annotated_item);
     quote!(
-        #(#[generics_inner(#input_args)])
-        *
-        #annotated_item
-        ).into()
+    #(#[generics_inner(#input_args)])
+    *
+    #annotated_item
+    )
+    .into()
 }
 
 #[doc(hidden)]
@@ -87,10 +90,11 @@ pub fn generics_inner(input: TokenStream, annotated_item: TokenStream) -> TokenS
         Item::Impl(impl_item) => &mut impl_item.generics,
         Item::Struct(struct_item) => &mut struct_item.generics,
         Item::Trait(trait_item) => &mut trait_item.generics,
-        _ => panic!("Unsupported type. Types currently supported are: Fn, Impl, Struct, Trait")
+        _ => panic!("Unsupported type. Types currently supported are: Fn, Impl, Struct, Trait"),
     };
 
-    imported.generics
+    imported
+        .generics
         .params
         .iter()
         .for_each(|b| item_generics.params.push(b.clone()));
