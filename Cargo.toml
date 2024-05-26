@@ -10,9 +10,6 @@ categories = [ "development-tools", "development-tools::procedural-macro-helpers
 [workspace]
 members = [ "macros" ]
 
-[dev-dependecies]
-macro_magic = { version = "0.5.0", features = ["proc_support"] }
-
 [dependencies]
 generics-alias-macros = { path = "./macros" }
 macro_magic = { version = "0.5.0", features = ["proc_support"] }

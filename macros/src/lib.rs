@@ -1,4 +1,3 @@
-use macro_magic::import_tokens_attr;
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::parse::{Parse, ParseStream, Result};
@@ -53,8 +52,8 @@ pub fn generics_def(input: TokenStream) -> TokenStream {
 /// # Examples
 ///
 /// ```
-/// # use macro_magic::export_tokens_no_emit;
 /// # use generics_alias_macros::*;
+/// # use macro_magic::export_tokens_no_emit;
 /// # use core::fmt::Debug;
 /// # generics_def!(Bounds1 <A: Copy>);
 /// # generics_def!(Bounds2 <B: Clone>);
@@ -79,7 +78,7 @@ pub fn generics(input: TokenStream, annotated_item: TokenStream) -> TokenStream 
 }
 
 #[doc(hidden)]
-#[import_tokens_attr]
+#[::macro_magic::import_tokens_attr]
 #[proc_macro_attribute]
 pub fn generics_inner(input: TokenStream, annotated_item: TokenStream) -> TokenStream {
     let mut item = parse_macro_input!(annotated_item as Item);

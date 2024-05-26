@@ -84,4 +84,4 @@ fail with an error:
 could not find `macro_magic` in the list of imported crates`
 ```
 
-I couldn't figure out how to cope with this issue :(
+The reason is probably because `macro_magic::import_tokens_attr` gets called during the expansion of `generics_inner` macro and it has to be available as a direct dependency at the caller's crate.

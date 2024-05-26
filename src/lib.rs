@@ -60,12 +60,12 @@
 //! ```
 //!
 
-// NOTE: The reexport of `macro_magic` crate does not work (I do not know why), so users still
-// have to specify the dependency in their Cargo.toml :(
-pub extern crate macro_magic;
 pub use generics_alias_macros::*;
+// NOTE: The reexport of `export_tokens_no_emit` is for `generics_def` macro, but users still
+// need to put `macro_magic` as a dependency in their Cargo.toml, because `import_tokens_attr`
+// from that library is called in expansion of `generics_inner` macro.
 #[doc(hidden)]
-pub use macro_magic::*;
+pub use macro_magic::export_tokens_no_emit;
 
 #[cfg(test)]
 mod tests {
